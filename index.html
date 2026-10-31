@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f3f5fb">
+  <title>待辦清單</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main class="todo-card">
+    <header class="card-header">
+      <p class="eyebrow">&#x628A;&#x6BCF;&#x4EF6;&#x4E8B;&#xFF0C;&#x4E00;&#x6B65;&#x4E00;&#x6B65;&#x5B8C;&#x6210;</p>
+      <h1>&#x5F85;&#x8FA6;&#x6E05;&#x55AE;</h1>
+      <p class="subtitle">&#x8A18;&#x4E0B;&#x4ECA;&#x5929;&#x60F3;&#x5B8C;&#x6210;&#x7684;&#x4E8B;&#x5427;&#x3002</p>
+    </header>
+
+    <form class="todo-form" id="todo-form">
+      <label class="visually-hidden" for="todo-input">&#x65B0;&#x589E;&#x5F85;&#x8FA6;&#x4E8B;&#x9805;</label>
+      <input
+        id="todo-input"
+        name="todo"
+        type="text"
+        placeholder="&#x4F8B;&#x5982;&#xFF1A;&#x5B8C;&#x6210;&#x4ECA;&#x5929;&#x7684;&#x95B1;&#x8B80;"
+        autocomplete="off"
+        maxlength="200"
+        required
+      >
+      <button class="add-button" type="submit">&#x65B0;&#x589E;</button>
+    </form>
+
+    <ul class="todo-list" id="todo-list" aria-label="&#x5F85;&#x8FA6;&#x4E8B;&#x9805;"></ul>
+    <p class="empty-message" id="empty-message">&#x9084;&#x6C92;&#x6709;&#x4EFB;&#x4F55;&#x5F85;&#x8FA6;&#x4E8B;&#x9805;,&#x65B0;&#x589E;&#x4E00;&#x500B;&#x5427;!</p>
+
+    <footer class="card-footer">
+      <span id="remaining-count" aria-live="polite">&#x672A;&#x5B8C;&#x6210;:0 &#x9805;</span>
+    </footer>
+  </main>
+</body>
+</html>
