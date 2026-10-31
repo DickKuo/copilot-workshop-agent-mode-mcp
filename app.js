@@ -1,4 +1,4 @@
-const STORAGE_KEY = "todo-list-items";
+﻿const STORAGE_KEY = "todo-list-items";
 const THEME_STORAGE_KEY = "todo-list-theme";
 
 const form = document.querySelector("#todo-form");
@@ -22,7 +22,7 @@ function loadTodos() {
     const todos = JSON.parse(savedTodos);
     return Array.isArray(todos) ? todos : [];
   } catch (error) {
-    console.error("\u7121\u6cd5\u8b80\u53d6\u5df2\u5132\u5b58\u7684\u5f85\u8fa6\u4e8b\u9805\uff1a", error);
+    console.error("無法讀取已儲存的待辦事項：", error);
     return [];
   }
 }
@@ -34,7 +34,7 @@ function loadThemePreference() {
     const preference = localStorage.getItem(THEME_STORAGE_KEY);
     return preference === "light" || preference === "dark" ? preference : null;
   } catch (error) {
-    console.error("\u7121\u6cd5\u8b80\u53D6\u4E3B\u984C\u504F\u597D\uff1a", error);
+    console.error("無法讀取主題偏好：", error);
     return null;
   }
 }
@@ -48,8 +48,8 @@ function isDarkMode() {
 function updateThemeButton() {
   const darkMode = isDarkMode();
   themeToggle.textContent = darkMode
-    ? "\u2600\uFE0F \u6DFA\u8272\u6A21\u5F0F"
-    : "\u{1F319} \u6DF1\u8272\u6A21\u5F0F";
+    ? "☀️ 淺色模式"
+    : "🌙 深色模式";
   themeToggle.setAttribute("aria-pressed", String(darkMode));
 }
 
@@ -70,8 +70,8 @@ themeToggle.addEventListener("click", () => {
   try {
     localStorage.setItem(THEME_STORAGE_KEY, themePreference);
   } catch (error) {
-    console.error("\u7121\u6cd5\u5132\u5B58\u4E3B\u984C\u504F\u597D\uff1a", error);
-    alert("\u7121\u6cd5\u5132\u5B58\u4E3B\u984C\u504F\u597D\uff0c\u91CD\u65B0\u958B\u555F\u9801\u9762\u5F8C\u53EF\u80FD\u6703\u6062\u5FA9\u7CFB\u7D71\u8A2D\u5B9A\u3002");
+    console.error("無法儲存主題偏好：", error);
+    alert("無法儲存主題偏好，重新開啟頁面後可能會恢復系統設定。");
   }
 
   updateThemeButton();
@@ -90,13 +90,25 @@ function saveTodos() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
     return true;
   } catch (error) {
-    console.error("\u7121\u6cd5\u5132\u5b58\u5f85\u8fa6\u4e8b\u9805\uff1a", error);
-    alert("\u7121\u6cd5\u5132\u5b58\u5f85\u8fa6\u4e8b\u9805\uff0c\u8acb\u78ba\u8a8d\u700f\u89bd\u5668\u5141\u8a31\u4f7f\u7528\u672c\u6a5f\u5132\u5b58\u7a7a\u9593\u3002");
+    console.error("無法儲存待辦事項：", error);
+    alert("無法儲存待辦事項，請確認瀏覽器允許使用本機儲存空間。");
     return false;
   }
 }
 
-function renderTodos() {
+function getFilterLabel(filterName) {
+  if (filterName === "active") {
+    return "未完成";
+  }
+
+  if (filterName === "completed") {
+    return "已完成";
+  }
+
+  return "全部";
+}
+
+function renderTodos(filterNotice = null) {
   list.replaceChildren();
 
   const visibleTodos = todos.filter((todo) => {
@@ -122,11 +134,25 @@ function renderTodos() {
     checkbox.className = "todo-checkbox";
     checkbox.type = "checkbox";
     checkbox.checked = todo.completed;
-    checkbox.setAttribute("aria-label", `\u6a19\u8a18\u300c${todo.text}\u300d\u70ba${todo.completed ? "\u672a\u5b8c\u6210" : "\u5df2\u5b8c\u6210"}`);
+    checkbox.setAttribute("aria-label", `標記「${todo.text}」為${todo.completed ? "未完成" : "已完成"}`);
     checkbox.addEventListener("change", () => {
-      todo.completed = checkbox.checked;
+      const nextCompleted = checkbox.checked;
+      todo.completed = nextCompleted;
       saveTodos();
-      renderTodos();
+
+      const matchesCurrentFilter = currentFilter === "all"
+        || (currentFilter === "active" && !nextCompleted)
+        || (currentFilter === "completed" && nextCompleted);
+
+      if (matchesCurrentFilter) {
+        renderTodos();
+        return;
+      }
+
+      const currentFilterLabel = getFilterLabel(currentFilter);
+      const nextFilterLabel = nextCompleted ? "已完成" : "未完成";
+      const nextFilterNotice = `「${todo.text}」已標記為${nextFilterLabel}，因此從「${currentFilterLabel}」篩選中隱藏，並未刪除；切換至「全部」或相關篩選即可查看。`;
+      renderTodos(nextFilterNotice);
     });
 
     const text = document.createElement("span");
@@ -136,8 +162,8 @@ function renderTodos() {
     const deleteButton = document.createElement("button");
     deleteButton.className = "delete-button";
     deleteButton.type = "button";
-    deleteButton.textContent = "\u522a\u9664";
-    deleteButton.setAttribute("aria-label", `\u522a\u9664\u300c${todo.text}\u300d`);
+    deleteButton.textContent = "刪除";
+    deleteButton.setAttribute("aria-label", `刪除「${todo.text}」`);
     deleteButton.addEventListener("click", () => {
       todos = todos.filter((itemTodo) => itemTodo.id !== todo.id);
       saveTodos();
@@ -149,19 +175,27 @@ function renderTodos() {
   }
 
   const remaining = todos.filter((todo) => !todo.completed).length;
-  remainingCount.textContent = `\u672a\u5b8c\u6210:${remaining} \u9805`;
+  remainingCount.textContent = `未完成:${remaining} 項`;
+
+  if (filterNotice) {
+    emptyMessage.textContent = filterNotice;
+    emptyMessage.hidden = false;
+    return;
+  }
 
   if (visibleTodos.length > 0) {
     emptyMessage.hidden = true;
-  } else {
-    const emptyMessages = {
-      all: "\u9084\u6C92\u6709\u4EFB\u4F55\u5F85\u8FA6\u4E8B\u9805,\u65B0\u589E\u4E00\u500B\u5427!",
-      active: "\u6C92\u6709\u672A\u5B8C\u6210\u7684\u5F85\u8FA6\u4E8B\u9805\u3002",
-      completed: "\u6C92\u6709\u5DF2\u5B8C\u6210\u7684\u5F85\u8FA6\u4E8B\u9805\u3002",
-    };
-    emptyMessage.textContent = emptyMessages[currentFilter];
-    emptyMessage.hidden = false;
+    return;
   }
+
+  const emptyMessages = {
+    all: "還沒有任何待辦事項，新增一個吧!",
+    active: "沒有未完成的待辦事項。",
+    completed: "沒有已完成的待辦事項。",
+  };
+
+  emptyMessage.textContent = emptyMessages[currentFilter];
+  emptyMessage.hidden = false;
 }
 
 for (const button of filterButtons) {
