@@ -6,6 +6,7 @@ const input = document.querySelector("#todo-input");
 const list = document.querySelector("#todo-list");
 const emptyMessage = document.querySelector("#empty-message");
 const remainingCount = document.querySelector("#remaining-count");
+const clearCompletedButton = document.querySelector("#clear-completed-button");
 const themeToggle = document.querySelector("#theme-toggle");
 const filterButtons = document.querySelectorAll("[data-filter]");
 const colorSchemePreference = window.matchMedia("(prefers-color-scheme: dark)");
@@ -111,6 +112,8 @@ function getFilterLabel(filterName) {
 function renderTodos(filterNotice = null) {
   list.replaceChildren();
 
+  clearCompletedButton.disabled = !todos.some((todo) => todo.completed);
+
   const visibleTodos = todos.filter((todo) => {
     if (currentFilter === "active") {
       return !todo.completed;
@@ -197,6 +200,24 @@ function renderTodos(filterNotice = null) {
   emptyMessage.textContent = emptyMessages[currentFilter];
   emptyMessage.hidden = false;
 }
+
+clearCompletedButton.addEventListener("click", () => {
+  const completedTodosExist = todos.some((todo) => todo.completed);
+
+  if (!completedTodosExist || !window.confirm("確定要清除所有已完成的待辦事項嗎？此操作無法復原。")) {
+    return;
+  }
+
+  const previousTodos = todos;
+  todos = todos.filter((todo) => !todo.completed);
+
+  if (!saveTodos()) {
+    todos = previousTodos;
+    return;
+  }
+
+  renderTodos();
+});
 
 for (const button of filterButtons) {
   button.addEventListener("click", () => {
