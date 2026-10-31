@@ -1,10 +1,15 @@
 const STORAGE_KEY = "todo-list-items";
+const THEME_STORAGE_KEY = "todo-list-theme";
 
 const form = document.querySelector("#todo-form");
 const input = document.querySelector("#todo-input");
 const list = document.querySelector("#todo-list");
 const emptyMessage = document.querySelector("#empty-message");
 const remainingCount = document.querySelector("#remaining-count");
+const themeToggle = document.querySelector("#theme-toggle");
+const filterButtons = document.querySelectorAll("[data-filter]");
+const colorSchemePreference = window.matchMedia("(prefers-color-scheme: dark)");
+let currentFilter = "all";
 
 function loadTodos() {
   const savedTodos = localStorage.getItem(STORAGE_KEY);
@@ -24,6 +29,62 @@ function loadTodos() {
 
 let todos = loadTodos();
 
+function loadThemePreference() {
+  try {
+    const preference = localStorage.getItem(THEME_STORAGE_KEY);
+    return preference === "light" || preference === "dark" ? preference : null;
+  } catch (error) {
+    console.error("\u7121\u6cd5\u8b80\u53D6\u4E3B\u984C\u504F\u597D\uff1a", error);
+    return null;
+  }
+}
+
+let themePreference = loadThemePreference();
+
+function isDarkMode() {
+  return themePreference ? themePreference === "dark" : colorSchemePreference.matches;
+}
+
+function updateThemeButton() {
+  const darkMode = isDarkMode();
+  themeToggle.textContent = darkMode
+    ? "\u2600\uFE0F \u6DFA\u8272\u6A21\u5F0F"
+    : "\u{1F319} \u6DF1\u8272\u6A21\u5F0F";
+  themeToggle.setAttribute("aria-pressed", String(darkMode));
+}
+
+function applyThemePreference() {
+  if (themePreference) {
+    document.documentElement.dataset.theme = themePreference;
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+
+  updateThemeButton();
+}
+
+themeToggle.addEventListener("click", () => {
+  themePreference = isDarkMode() ? "light" : "dark";
+  document.documentElement.dataset.theme = themePreference;
+
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, themePreference);
+  } catch (error) {
+    console.error("\u7121\u6cd5\u5132\u5B58\u4E3B\u984C\u504F\u597D\uff1a", error);
+    alert("\u7121\u6cd5\u5132\u5B58\u4E3B\u984C\u504F\u597D\uff0c\u91CD\u65B0\u958B\u555F\u9801\u9762\u5F8C\u53EF\u80FD\u6703\u6062\u5FA9\u7CFB\u7D71\u8A2D\u5B9A\u3002");
+  }
+
+  updateThemeButton();
+});
+
+colorSchemePreference.addEventListener("change", () => {
+  if (!themePreference) {
+    updateThemeButton();
+  }
+});
+
+applyThemePreference();
+
 function saveTodos() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
@@ -38,7 +99,19 @@ function saveTodos() {
 function renderTodos() {
   list.replaceChildren();
 
-  for (const todo of todos) {
+  const visibleTodos = todos.filter((todo) => {
+    if (currentFilter === "active") {
+      return !todo.completed;
+    }
+
+    if (currentFilter === "completed") {
+      return todo.completed;
+    }
+
+    return true;
+  });
+
+  for (const todo of visibleTodos) {
     const item = document.createElement("li");
     item.className = "todo-item";
     if (todo.completed) {
@@ -77,7 +150,32 @@ function renderTodos() {
 
   const remaining = todos.filter((todo) => !todo.completed).length;
   remainingCount.textContent = `\u672a\u5b8c\u6210:${remaining} \u9805`;
-  emptyMessage.hidden = todos.length > 0;
+
+  if (visibleTodos.length > 0) {
+    emptyMessage.hidden = true;
+  } else {
+    const emptyMessages = {
+      all: "\u9084\u6C92\u6709\u4EFB\u4F55\u5F85\u8FA6\u4E8B\u9805,\u65B0\u589E\u4E00\u500B\u5427!",
+      active: "\u6C92\u6709\u672A\u5B8C\u6210\u7684\u5F85\u8FA6\u4E8B\u9805\u3002",
+      completed: "\u6C92\u6709\u5DF2\u5B8C\u6210\u7684\u5F85\u8FA6\u4E8B\u9805\u3002",
+    };
+    emptyMessage.textContent = emptyMessages[currentFilter];
+    emptyMessage.hidden = false;
+  }
+}
+
+for (const button of filterButtons) {
+  button.addEventListener("click", () => {
+    currentFilter = button.dataset.filter;
+
+    for (const filterButton of filterButtons) {
+      const isActive = filterButton === button;
+      filterButton.classList.toggle("is-active", isActive);
+      filterButton.setAttribute("aria-pressed", String(isActive));
+    }
+
+    renderTodos();
+  });
 }
 
 form.addEventListener("submit", (event) => {

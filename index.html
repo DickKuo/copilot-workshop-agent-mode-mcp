@@ -11,9 +11,14 @@
 <body>
   <main class="todo-card">
     <header class="card-header">
-      <p class="eyebrow">&#x628A;&#x6BCF;&#x4EF6;&#x4E8B;&#xFF0C;&#x4E00;&#x6B65;&#x4E00;&#x6B65;&#x5B8C;&#x6210;</p>
-      <h1>&#x5F85;&#x8FA6;&#x6E05;&#x55AE;</h1>
-      <p class="subtitle">&#x8A18;&#x4E0B;&#x4ECA;&#x5929;&#x60F3;&#x5B8C;&#x6210;&#x7684;&#x4E8B;&#x5427;&#x3002</p>
+      <div class="header-copy">
+        <p class="eyebrow">&#x628A;&#x6BCF;&#x4EF6;&#x4E8B;&#xFF0C;&#x4E00;&#x6B65;&#x4E00;&#x6B65;&#x5B8C;&#x6210;</p>
+        <h1>&#x5F85;&#x8FA6;&#x6E05;&#x55AE;</h1>
+        <p class="subtitle">&#x8A18;&#x4E0B;&#x4ECA;&#x5929;&#x60F3;&#x5B8C;&#x6210;&#x7684;&#x4E8B;&#x5427;&#x3002</p>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">
+        &#x1F319; &#x6DF1;&#x8272;&#x6A21;&#x5F0F;
+      </button>
     </header>
 
     <form class="todo-form" id="todo-form">
@@ -30,8 +35,14 @@
       <button class="add-button" type="submit">&#x65B0;&#x589E;</button>
     </form>
 
+    <nav class="filter-bar" aria-label="&#x7BE9;&#x9078;&#x5F85;&#x8FA6;&#x4E8B;&#x9805;">
+      <button class="filter-button is-active" type="button" data-filter="all" aria-pressed="true">&#x5168;&#x90E8;</button>
+      <button class="filter-button" type="button" data-filter="active" aria-pressed="false">&#x672A;&#x5B8C;&#x6210;</button>
+      <button class="filter-button" type="button" data-filter="completed" aria-pressed="false">&#x5DF2;&#x5B8C;&#x6210;</button>
+    </nav>
+
     <ul class="todo-list" id="todo-list" aria-label="&#x5F85;&#x8FA6;&#x4E8B;&#x9805;"></ul>
-    <p class="empty-message" id="empty-message">&#x9084;&#x6C92;&#x6709;&#x4EFB;&#x4F55;&#x5F85;&#x8FA6;&#x4E8B;&#x9805;,&#x65B0;&#x589E;&#x4E00;&#x500B;&#x5427;!</p>
+    <p class="empty-message" id="empty-message" aria-live="polite"></p>
 
     <footer class="card-footer">
       <span id="remaining-count" aria-live="polite">&#x672A;&#x5B8C;&#x6210;:0 &#x9805;</span>
