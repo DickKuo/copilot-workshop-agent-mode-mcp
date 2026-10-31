@@ -96,7 +96,7 @@ function saveTodos() {
   }
 }
 
-function renderTodos() {
+function renderTodos(filterNotice = null) {
   list.replaceChildren();
 
   const visibleTodos = todos.filter((todo) => {
@@ -126,7 +126,14 @@ function renderTodos() {
     checkbox.addEventListener("change", () => {
       todo.completed = checkbox.checked;
       saveTodos();
-      renderTodos();
+
+      const matchesCurrentFilter = currentFilter === "all"
+        || (currentFilter === "active" && !todo.completed)
+        || (currentFilter === "completed" && todo.completed);
+      const filterNotice = matchesCurrentFilter
+        ? null
+        : `\u300C${todo.text}\u300D\u5DF2\u6A19\u8A18\u70BA${todo.completed ? "\u5DF2\u5B8C\u6210" : "\u672A\u5B8C\u6210"}\uFF0C\u56E0\u6B64\u5F9E\u300C${currentFilter === "completed" ? "\u5DF2\u5B8C\u6210" : "\u672A\u5B8C\u6210"}\u300D\u7BE9\u9078\u4E2D\u96B1\u85CF\uFF0C\u4E26\u672A\u522A\u9664\uFF1B\u5207\u63DB\u81F3\u300C\u5168\u90E8\u300D\u6216\u76F8\u95DC\u7BE9\u9078\u5373\u53EF\u67E5\u770B\u3002`;
+      renderTodos(filterNotice);
     });
 
     const text = document.createElement("span");
@@ -151,7 +158,7 @@ function renderTodos() {
   const remaining = todos.filter((todo) => !todo.completed).length;
   remainingCount.textContent = `\u672a\u5b8c\u6210:${remaining} \u9805`;
 
-  if (visibleTodos.length > 0) {
+  if (visibleTodos.length > 0 && !filterNotice) {
     emptyMessage.hidden = true;
   } else {
     const emptyMessages = {
@@ -159,7 +166,7 @@ function renderTodos() {
       active: "\u6C92\u6709\u672A\u5B8C\u6210\u7684\u5F85\u8FA6\u4E8B\u9805\u3002",
       completed: "\u6C92\u6709\u5DF2\u5B8C\u6210\u7684\u5F85\u8FA6\u4E8B\u9805\u3002",
     };
-    emptyMessage.textContent = emptyMessages[currentFilter];
+    emptyMessage.textContent = filterNotice || emptyMessages[currentFilter];
     emptyMessage.hidden = false;
   }
 }
